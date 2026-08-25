@@ -121,6 +121,9 @@ def history(username):
     return jsonify(results)
 
 
+from api_v1 import api_v1
+app.register_blueprint(api_v1, url_prefix="/api/v1")
+
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
