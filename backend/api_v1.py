@@ -1,5 +1,14 @@
 import sqlite3
 from flask import Blueprint, jsonify, request
+import os
+import sys
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
+
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 api_v1 = Blueprint("api_v1", __name__)
 
@@ -490,3 +499,38 @@ def add_connection():
     conn.close()
 
     return jsonify(dict(row)), 201
+
+
+# -------------------------
+# MATCHING
+# -------------------------
+
+from matching.engine import find_matches
+
+
+@api_v1.route("/issues/<int:issue_id>/matches", methods=["GET"])
+def get_issue_matches(issue_id):
+    try:
+        minimum_score = int(
+            request.args.get("minimum_score", 1)
+        )
+    except ValueError:
+        return error(
+            "minimum_score must be an integer."
+        )
+
+    if minimum_score < 1:
+        return error(
+            "minimum_score must be at least 1."
+        )
+
+    matches = find_matches(
+        issue_id,
+        minimum_score=minimum_score
+    )
+
+    return jsonify({
+        "issue_id": issue_id,
+        "minimum_score": minimum_score,
+        "matches": matches
+    })
