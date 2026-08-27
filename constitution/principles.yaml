@@ -1,0 +1,51 @@
+version: "0.1.0"
+
+principles:
+
+  human_autonomy:
+    description: "Users retain meaningful choice except where narrowly defined safety constraints require otherwise."
+
+  privacy_minimization:
+    description: "Do not collect information that is not necessary for an explicitly defined purpose."
+
+  evidence_first:
+    description: "Claims must remain distinguishable from observations, evidence, interpretation, and conclusions."
+
+  provenance:
+    description: "Evidence lineage must be preserved so derivative repetition is not mistaken for independent confirmation."
+
+  uncertainty:
+    description: "Unknown information must remain unknown rather than being silently converted into false certainty."
+
+  good_faith:
+    description: "An incorrect statement is not automatically evidence of intentional deception."
+
+  identity_separation:
+    description: "Identity verification does not establish truthfulness, authority, character, or credibility."
+
+  popularity_separation:
+    description: "Engagement and popularity are not substitutes for evidence quality."
+
+  legal_context:
+    description: "Law, rights claims, ethics, and moral reasoning must remain distinguishable."
+
+  causality:
+    description: "Temporal sequence and correlation must not automatically be represented as causation."
+
+  emergency_proportionality:
+    description: "Emergency actions must be narrowly scoped, necessary, auditable, and proportionate."
+
+  deterministic_authorization:
+    description: "AI recommendations cannot independently authorize high-impact actions."
+
+  no_god_mode:
+    description: "No ordinary administrator receives unrestricted access to all user information."
+
+  user_data_portability:
+    description: "Users must have a practical mechanism to export their own data."
+
+  revision:
+    description: "Conclusions and evidence assessments must be revisable without destroying historical provenance."
+
+  transparency:
+    description: "Explain the basis and limitations of consequential system decisions without unnecessarily exposing private information."
