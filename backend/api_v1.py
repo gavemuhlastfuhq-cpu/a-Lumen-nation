@@ -1,3 +1,5 @@
+import sqlite3
+
 from flask import Blueprint, jsonify, request
 
 from database.connection import get_connection
@@ -463,6 +465,7 @@ def add_connection():
         conn.commit()
 
     except sqlite3.IntegrityError:
+        conn.rollback()
         conn.close()
         return error("Connection already exists.", 409)
 
