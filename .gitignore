@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.lumen_checkpoints/
+*.db.backup
+*.db.v1
+*.db
