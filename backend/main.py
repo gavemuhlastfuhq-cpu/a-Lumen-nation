@@ -1,132 +1,222 @@
 from flask import Flask, jsonify, request
-import sqlite3
-import os
-import sys
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from config import APP_NAME, APP_VERSION, HOST, PORT, DEBUG
+from database.connection import get_connection
+from backend.validation import (
+    validate_message,
+    validate_username,
+)
 
-AI_DIR = os.path.join(BASE_DIR, "ai")
-sys.path.append(AI_DIR)
+from ai.assistant import process_message
 
-from assistant import process_message
 
 app = Flask(__name__)
-
-DB_PATH = os.path.join(BASE_DIR, "database", "lumen.db")
-
-
-def get_db():
-    return sqlite3.connect(DB_PATH)
 
 
 @app.route("/")
 def home():
     return jsonify({
-        "app": "Lumen Nation",
+        "app": APP_NAME,
         "status": "online",
-        "version": "0.3"
+        "version": APP_VERSION,
     })
 
 
 @app.route("/health")
 def health():
     return jsonify({
-        "healthy": True
+        "healthy": True,
+        "app": APP_NAME,
+        "version": APP_VERSION,
     })
 
 
 @app.route("/users", methods=["POST"])
 def create_user():
-    data = request.json
-    username = data.get("username")
+    data = request.get_json(silent=True)
 
-    conn = get_db()
-    cursor = conn.cursor()
+    if not isinstance(data, dict):
+        return jsonify({
+            "error": "Request body must be a JSON object."
+        }), 400
 
-    cursor.execute(
-        "INSERT INTO users (username) VALUES (?)",
-        (username,)
-    )
+    try:
+        username = validate_username(
+            data.get("username")
+        )
+    except ValueError as exc:
+        return jsonify({
+            "error": str(exc)
+        }), 400
 
-    conn.commit()
-    conn.close()
+    conn = get_connection()
 
-    return jsonify({
-        "message": "User created",
-        "username": username
-    })
+    try:
+        existing = conn.execute(
+            """
+            SELECT id, username
+            FROM users
+            WHERE username = ?
+            """,
+            (username,),
+        ).fetchone()
+
+        if existing:
+            return jsonify({
+                "error": "Username already exists.",
+                "username": username,
+            }), 409
+
+        cursor = conn.execute(
+            """
+            INSERT INTO users (username)
+            VALUES (?)
+            """,
+            (username,),
+        )
+
+        conn.commit()
+
+        return jsonify({
+            "message": "User created",
+            "username": username,
+            "id": cursor.lastrowid,
+        }), 201
+
+    finally:
+        conn.close()
 
 
 @app.route("/users", methods=["GET"])
 def users():
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_connection()
 
-    cursor.execute("SELECT * FROM users")
-    results = cursor.fetchall()
+    try:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM users
+            ORDER BY id ASC
+            """
+        ).fetchall()
 
-    conn.close()
+        return jsonify([
+            dict(row)
+            for row in rows
+        ])
 
-    return jsonify(results)
+    finally:
+        conn.close()
 
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
+    data = request.get_json(silent=True)
 
-    username = data.get("username")
-    message = data.get("message")
+    if not isinstance(data, dict):
+        return jsonify({
+            "error": "Request body must be a JSON object."
+        }), 400
 
-    response = process_message(
-        username,
-        message
-    )
+    try:
+        username = validate_username(
+            data.get("username")
+        )
 
-    conn = get_db()
-    cursor = conn.cursor()
+        message = validate_message(
+            data.get("message")
+        )
 
-    cursor.execute(
-        """
-        INSERT INTO messages
-        (username, message, response)
-        VALUES (?, ?, ?)
-        """,
-        (
+    except ValueError as exc:
+        return jsonify({
+            "error": str(exc)
+        }), 400
+
+    conn = get_connection()
+
+    try:
+        user = conn.execute(
+            """
+            SELECT id, username
+            FROM users
+            WHERE username = ?
+            """,
+            (username,),
+        ).fetchone()
+
+        if user is None:
+            return jsonify({
+                "error": "User not found."
+            }), 404
+
+        response = process_message(
             username,
             message,
-            response["response"]
         )
-    )
 
-    conn.commit()
-    conn.close()
+        conn.execute(
+            """
+            INSERT INTO messages
+            (username, message, response)
+            VALUES (?, ?, ?)
+            """,
+            (
+                username,
+                message,
+                response["response"],
+            ),
+        )
 
-    return jsonify(response)
+        conn.commit()
+
+        return jsonify(response)
+
+    finally:
+        conn.close()
 
 
 @app.route("/history/<username>", methods=["GET"])
 def history(username):
-    conn = get_db()
-    cursor = conn.cursor()
+    try:
+        username = validate_username(username)
+    except ValueError as exc:
+        return jsonify({
+            "error": str(exc)
+        }), 400
 
-    cursor.execute(
-        "SELECT * FROM messages WHERE username=?",
-        (username,)
-    )
+    conn = get_connection()
 
-    results = cursor.fetchall()
+    try:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM messages
+            WHERE username = ?
+            ORDER BY id ASC
+            """,
+            (username,),
+        ).fetchall()
 
-    conn.close()
+        return jsonify([
+            dict(row)
+            for row in rows
+        ])
 
-    return jsonify(results)
+    finally:
+        conn.close()
 
 
-from api_v1 import api_v1
-app.register_blueprint(api_v1, url_prefix="/api/v1")
+from backend.api_v1 import api_v1
+
+app.register_blueprint(
+    api_v1,
+    url_prefix="/api/v1",
+)
+
 
 if __name__ == "__main__":
     app.run(
-        host="0.0.0.0",
-        port=8000,
-        debug=False
+        host=HOST,
+        port=PORT,
+        debug=DEBUG,
     )

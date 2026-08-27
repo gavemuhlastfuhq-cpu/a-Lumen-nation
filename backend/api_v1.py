@@ -1,25 +1,12 @@
-import sqlite3
 from flask import Blueprint, jsonify, request
-import os
-import sys
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(os.path.abspath(__file__))
-)
-
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
+from database.connection import get_connection
 
 api_v1 = Blueprint("api_v1", __name__)
 
 
 def get_db():
-    from main import DB_PATH
-
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
+    return get_connection()
 
 
 def error(message, status=400):
