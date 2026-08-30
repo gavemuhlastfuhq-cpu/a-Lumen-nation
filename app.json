@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "a-Lumen-nation",
+    "slug": "a-lumen-nation",
+    "version": "0.1.0",
+    "platforms": [
+      "android",
+      "ios",
+      "web"
+    ],
+    "sdkVersion": "48.0.0",
+    "orientation": "portrait",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.anonymous.alumennation"
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.alumennation"
+    }
+  }
+}

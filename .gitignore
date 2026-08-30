@@ -1,6 +1,46 @@
+# Python
 __pycache__/
-*.pyc
-.lumen_checkpoints/
+*.py[cod]
+*.db
 *.db.backup
 *.db.v1
-*.db
+
+# Lumen development
+.lumen_checkpoints/
+
+# Node / JavaScript
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Expo
+.expo/
+.expo-shared/
+
+# React Native / Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk
+*.aab
+
+# iOS
+ios/Pods/
+ios/build/
+*.xcuserstate
+xcuserdata/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
